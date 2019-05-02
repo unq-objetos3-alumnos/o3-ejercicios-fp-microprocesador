@@ -3,7 +3,7 @@ import ar.edu.unq.o3._
 
 class MicroSpec extends FunSpec with Matchers {
 
-  describe("Ejecucion") {
+  describe("ejecutar") {
 
     describe("instrucciones") {
 
@@ -102,4 +102,25 @@ class MicroSpec extends FunSpec with Matchers {
 
   }
 
+
+  describe("imprimir") {
+
+    it("imprime un conjunto de instrucciones separadas por coma y con parámetros entre corchetes") {
+      val p = new Programa(List(
+        new Add(),
+        new Mul(),
+        new Swap(),
+        new Load(23),
+        new Store(42),
+        new If(List(
+          new Add(),
+          new Add()
+        )),
+        new Halt()
+      ))
+
+      p.imprimir() should equal("ADD, MUL, SWAP, LOAD[23], STORE[42], IF[ADD, ADD], HALT")
+    }
+
+  }
 }

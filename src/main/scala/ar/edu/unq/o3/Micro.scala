@@ -14,18 +14,24 @@ package ar.edu.unq.o3 {
     def ejecutar(micro: Micro): Unit = {
       instrucciones.foreach(_.ejecutar(micro))
     }
+
+    def imprimir() = instrucciones.map(_.imprimir).mkString(", ")
   }
 
   trait Instruccion {
     def ejecutar(micro: Micro): Unit
+
+    def imprimir(): String
   }
 
   class Add extends Instruccion {
     override def ejecutar(micro: Micro): Unit = micro.a = micro.a + micro.b
+    override def imprimir(): String = "ADD"
   }
 
   class Mul extends Instruccion {
     override def ejecutar(micro: Micro): Unit = micro.a = micro.a * micro.b
+    override def imprimir(): String = "MUL"
   }
 
   class Swap extends Instruccion {
@@ -34,22 +40,27 @@ package ar.edu.unq.o3 {
       micro.b = micro.a
       micro.a = tempB
     }
+    override def imprimir(): String = "SWAP"
   }
 
   class Load(posicion: Int) extends Instruccion {
     override def ejecutar(micro: Micro): Unit = micro.a = micro.memoria(posicion)
+    override def imprimir(): String = s"LOAD[${posicion}]"
   }
 
   class Store(posicion: Int) extends Instruccion {
     override def ejecutar(micro: Micro): Unit = micro.memoria(posicion) = micro.a
+    override def imprimir(): String = s"STORE[${posicion}]"
   }
 
   class If(sub: List[Instruccion]) extends Instruccion {
     override def ejecutar(micro: Micro): Unit = if (micro.a == 0) sub.foreach(i => i.ejecutar(micro))
+    override def imprimir(): String = s"IF[${sub.map(_.imprimir()).mkString(", ")}]"
   }
 
   class Halt extends Instruccion {
     override def ejecutar(micro: Micro): Unit = throw new EjecucionDetenidaException
+    override def imprimir(): String = "HALT"
   }
 
 }
