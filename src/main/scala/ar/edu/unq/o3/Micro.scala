@@ -10,18 +10,35 @@ package ar.edu.unq.o3 {
 
   class EjecucionDetenidaException extends Exception
 
-  class Programa(val instrucciones: List[Instruccion]) {
+  class Programa(var instrucciones: Seq[Instruccion]) {
     def ejecutar(micro: Micro): Unit = {
       instrucciones.foreach(_.ejecutar(micro))
     }
 
     def imprimir() = instrucciones.map(_.imprimir).mkString(", ")
+
+    def simplificar() {
+      var i = 0
+      while (i < instrucciones.size - 1) {
+        val instruccion = instrucciones(i)
+        val siguiente = instrucciones(i + 1)
+        val simplificado = instruccion.simplificar(siguiente)
+
+        instrucciones = instrucciones.take(i) ++ simplificado ++ instrucciones.drop(i + 2);
+        if (simplificado == Seq(instruccion, siguiente))
+          i += 1
+      }
+    }
+
   }
 
   trait Instruccion {
+
     def ejecutar(micro: Micro): Unit
 
     def imprimir(): String
+
+    def simplificar(siguiente: Instruccion): Seq[Instruccion] = Seq(this, siguiente)
   }
 
   object Add extends Instruccion {
@@ -41,21 +58,32 @@ package ar.edu.unq.o3 {
       micro.a = tempB
     }
     override def imprimir(): String = "SWAP"
+
+    override def simplificar(siguiente: Instruccion): Seq[Instruccion] = if (siguiente == this) Seq() else super.simplificar(siguiente)
   }
 
-  class Load(posicion: Int) extends Instruccion {
+  class Load(val posicion: Int) extends Instruccion {
     override def ejecutar(micro: Micro): Unit = micro.a = micro.memoria(posicion)
     override def imprimir(): String = s"LOAD[${posicion}]"
+
+    override def simplificar(siguiente: Instruccion): Seq[Instruccion] = if (siguiente.isInstanceOf[Load]) Seq(siguiente) else super.simplificar(siguiente)
+
+    override def equals(obj: scala.Any): Boolean = obj.isInstanceOf[Load] && obj.asInstanceOf[Load].posicion == this.posicion
   }
 
-  class Store(posicion: Int) extends Instruccion {
+  class Store(val posicion: Int) extends Instruccion {
     override def ejecutar(micro: Micro): Unit = micro.memoria(posicion) = micro.a
     override def imprimir(): String = s"STORE[${posicion}]"
+
+    override def simplificar(siguiente: Instruccion): Seq[Instruccion] = if (siguiente.isInstanceOf[Store]) Seq(siguiente) else super.simplificar(siguiente)
+    override def equals(obj: scala.Any): Boolean = obj.isInstanceOf[Store] && obj.asInstanceOf[Store].posicion == this.posicion
   }
 
   class If(sub: List[Instruccion]) extends Instruccion {
     override def ejecutar(micro: Micro): Unit = if (micro.a == 0) sub.foreach(i => i.ejecutar(micro))
     override def imprimir(): String = s"IF[${sub.map(_.imprimir()).mkString(", ")}]"
+
+    override def simplificar(siguiente: Instruccion): Seq[Instruccion] = if (this.sub.isEmpty) Seq(siguiente) else super.simplificar(siguiente)
   }
 
   object Halt extends Instruccion {
