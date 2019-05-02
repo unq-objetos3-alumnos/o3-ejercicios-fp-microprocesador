@@ -24,17 +24,17 @@ package ar.edu.unq.o3 {
     def imprimir(): String
   }
 
-  class Add extends Instruccion {
+  object Add extends Instruccion {
     override def ejecutar(micro: Micro): Unit = micro.a = micro.a + micro.b
     override def imprimir(): String = "ADD"
   }
 
-  class Mul extends Instruccion {
+  object Mul extends Instruccion {
     override def ejecutar(micro: Micro): Unit = micro.a = micro.a * micro.b
     override def imprimir(): String = "MUL"
   }
 
-  class Swap extends Instruccion {
+  object Swap extends Instruccion {
     override def ejecutar(micro: Micro): Unit = {
       val tempB = micro.b
       micro.b = micro.a
@@ -58,7 +58,7 @@ package ar.edu.unq.o3 {
     override def imprimir(): String = s"IF[${sub.map(_.imprimir()).mkString(", ")}]"
   }
 
-  class Halt extends Instruccion {
+  object Halt extends Instruccion {
     override def ejecutar(micro: Micro): Unit = throw new EjecucionDetenidaException
     override def imprimir(): String = "HALT"
   }

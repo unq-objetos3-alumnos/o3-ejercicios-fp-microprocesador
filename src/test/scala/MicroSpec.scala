@@ -10,7 +10,7 @@ class MicroSpec extends FunSpec with Matchers {
       it("ADD suma A y B en A") {
         val micro = new Micro(2, 5)
         val programa = new Programa(List(
-          new Add()
+          Add
         ))
         programa.ejecutar(micro)
         micro.a should equal(2 + 5)
@@ -19,7 +19,7 @@ class MicroSpec extends FunSpec with Matchers {
       it("MUL multiplica A y B en A") {
         val micro = new Micro(2, 5)
         val programa = new Programa(List(
-          new Mul()
+          Mul
         ))
         programa.ejecutar(micro)
         micro.a should equal(10)
@@ -28,7 +28,7 @@ class MicroSpec extends FunSpec with Matchers {
       it("SWAP intercambia A y B") {
         val micro = new Micro(2, 5)
         val programa = new Programa(List(
-          new Swap()
+          Swap
         ))
         programa.ejecutar(micro)
         micro.a should equal(5)
@@ -60,8 +60,8 @@ class MicroSpec extends FunSpec with Matchers {
           val micro = new Micro(42, 5)
           val programa = new Programa(List(
             new If(List(
-              new Add(),
-              new Add()
+              Add,
+              Add
             ))
           ))
           programa.ejecutar(micro)
@@ -73,8 +73,8 @@ class MicroSpec extends FunSpec with Matchers {
           val micro = new Micro(0, 5)
           val programa = new Programa(List(
             new If(List(
-              new Add(),
-              new Add()
+              Add,
+              Add
             ))
           ))
           programa.ejecutar(micro)
@@ -87,10 +87,10 @@ class MicroSpec extends FunSpec with Matchers {
       it("HALT interrumpe con una exception y no ejecuta lo que sigue") {
         val micro = new Micro(10, 5)
         val programa = new Programa(List(
-          new Add(),
-          new Halt(),
+          Add,
+          Halt,
           // aca frena
-          new Add()
+          Add
         ))
         intercept[EjecucionDetenidaException] {
           programa.ejecutar(micro)
@@ -107,16 +107,13 @@ class MicroSpec extends FunSpec with Matchers {
 
     it("imprime un conjunto de instrucciones separadas por coma y con parámetros entre corchetes") {
       val p = new Programa(List(
-        new Add(),
-        new Mul(),
-        new Swap(),
+        Add,
+        Mul,
+        Swap,
         new Load(23),
         new Store(42),
-        new If(List(
-          new Add(),
-          new Add()
-        )),
-        new Halt()
+        new If(List(Add, Add)),
+        Halt
       ))
 
       p.imprimir() should equal("ADD, MUL, SWAP, LOAD[23], STORE[42], IF[ADD, ADD], HALT")
