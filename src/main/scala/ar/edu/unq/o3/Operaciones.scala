@@ -2,37 +2,66 @@ package ar.edu.unq.o3 {
 
   object Operaciones {
 
-    def ejecutar(microInicial: Micro, programa: Programa): Micro = {
+    implicit def programaAInstrucciones(programa: Programa): List[Instruccion] = programa.instrucciones
 
-      def ejecutarInstruccion: (Micro, Instruccion) => Micro = (micro, instruccion) => {
-        instruccion match {
-          case Add => micro.copy(a = micro.a + micro.b)
-          case Mul => micro.copy(a = micro.a * micro.b)
-          case Swap => micro.copy(a = micro.b, b = micro.a)
-          case Load(posicion) => micro.copy(a = micro.memoria(posicion))
-          case Store(posicion) => micro.copy(memoria = micro.memoria.updated(posicion, micro.a))
-          case If(instrucciones) => if (micro.a == 0) instrucciones.foldLeft(micro)(ejecutarInstruccion) else micro
-          case Halt => throw new EjecucionDetenidaException(micro)
+    //
+    // Ejecutar
+    //
+
+    def ejecutarInstruccion = (micro: Micro, instruccion: Instruccion) => {
+      println(s" > Ejecutando ${imprimir(instruccion)}")
+      instruccion match {
+        case Add => micro.copy(a = micro.a + micro.b)
+        case Mul => micro.copy(a = micro.a * micro.b)
+        case Swap => micro.copy(a = micro.b, b = micro.a)
+        case Load(posicion) => micro.copy(a = micro.memoria(posicion))
+        case Store(posicion) => micro.copy(memoria = micro.memoria.updated(posicion, micro.a))
+        case If(instrucciones) => if (micro.a == 0) ejecutar(micro, instrucciones) else micro
+        case Halt => throw new EjecucionDetenidaException(micro)
+      }
+    }
+
+    def ejecutar(microInicial: Micro, instrucciones: List[Instruccion]): Micro = {
+      instrucciones.foldLeft(microInicial)(ejecutarInstruccion)
+    }
+
+    def memoizar(function: (Micro, Instruccion) => Micro): (Micro, Instruccion) => Micro = {
+      var cache = Map[(Micro, Instruccion), Micro]()
+
+      (micro, instruccion) => {
+        if (cache.contains(micro, instruccion))
+          cache.get(micro, instruccion).get
+        else {
+          val nuevoMicro = function(micro, instruccion)
+          cache += ((micro, instruccion) -> nuevoMicro)
+          nuevoMicro
         }
       }
-
-      programa.instrucciones.foldLeft(microInicial)(ejecutarInstruccion)
     }
 
-    def imprimir(programa: Programa): String = {
-      def imprimir: (Seq[Instruccion]) => String = instrucciones => {
-        instrucciones.map {
-          case Add                 => "ADD"
-          case Mul                 => "MUL"
-          case Swap                => "SWAP"
-          case Load(address)       => s"LOAD[$address]"
-          case Store(address)      => s"STORE[$address]"
-          case If(sub) => s"IF[${imprimir(sub)}]"
-          case Halt                => "HALT"
-        }.mkString(", ")
-      }
-      return imprimir(programa.instrucciones)
+    def ejecutarMemoizando(microInicial: Micro, instrucciones: List[Instruccion]): Micro = {
+      instrucciones.foldLeft(microInicial)(memoizar(ejecutarInstruccion))
     }
+
+    //
+    // Imprimir
+    //
+
+    def imprimir(instruccion: Instruccion): String = instruccion match {
+      case Add                 => "ADD"
+      case Mul                 => "MUL"
+      case Swap                => "SWAP"
+      case Load(address)       => s"LOAD[$address]"
+      case Store(address)      => s"STORE[$address]"
+      case If(sub) => s"IF[${imprimir(sub)}]"
+      case Halt                => "HALT"
+    }
+
+    def imprimir(instrucciones: Seq[Instruccion]): String = instrucciones.map(imprimir).mkString(", ")
+
+    //
+    // Simplificar
+    //
 
     def simplificar(programa: Programa): Unit = {
       def simplificar: (List[Instruccion]) => List[Instruccion] = instrucciones => instrucciones match {

@@ -1,6 +1,6 @@
 import org.scalatest.{FunSpec, Matchers}
 import ar.edu.unq.o3._
-import ar.edu.unq.o3.Operaciones._
+import ar.edu.unq.o3.Operaciones.{ ejecutar, ejecutarMemoizando, imprimir, simplificar, programaAInstrucciones }
 
 class MicroSpec extends FunSpec with Matchers {
 
@@ -92,6 +92,24 @@ class MicroSpec extends FunSpec with Matchers {
           ejecutar(micro, programa)
         }
         exception.micro.a should equal(15) // 15, no 20
+      }
+
+    }
+
+    describe("ejecutarMemoizando") {
+
+      it("debe ejecutar una unica vez dos LOAD con la misma direccion y mismo estado de micro") {
+        val ejecutar = ejecutarMemoizando(_, _)
+
+        val micro = new Micro(2, 0)
+        val programa = new Programa(List(
+          Add, // a = 2, b = 0  => a = 2 + 0, b = 0 => a = 2, b = 0 (queda igual)
+          Add  // este no se va a ejecutar, se memoiza
+        ))
+        ejecutar(micro, programa).a should equal(2)
+
+        // TODO: acá deberíamos hacer un assert sobre un nuevo estado tipo FLOPS (numero de instrucciones ejecutadas)
+        // al memoizar debería FLOPS = 1. Con el ejecutar tradicional daría 2
       }
 
     }
