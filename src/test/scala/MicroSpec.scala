@@ -13,8 +13,7 @@ class MicroSpec extends FunSpec with Matchers {
         val programa = new Programa(List(
           Add
         ))
-        ejecutar(micro, programa)
-        micro.a should equal(2 + 5)
+        ejecutar(micro, programa).a should equal(2 + 5)
       }
 
       it("MUL multiplica A y B en A") {
@@ -22,8 +21,7 @@ class MicroSpec extends FunSpec with Matchers {
         val programa = new Programa(List(
           Mul
         ))
-        ejecutar(micro, programa)
-        micro.a should equal(10)
+        ejecutar(micro, programa).a should equal(10)
       }
 
       it("SWAP intercambia A y B") {
@@ -31,19 +29,17 @@ class MicroSpec extends FunSpec with Matchers {
         val programa = new Programa(List(
           Swap
         ))
-        ejecutar(micro, programa)
-        micro.a should equal(5)
-        micro.b should equal(2)
+        val newMicro = ejecutar(micro, programa)
+        newMicro.a should equal(5)
+        newMicro.b should equal(2)
       }
 
       it("LOAD(pos) carga el contenido de la posicion en A") {
-        val micro = new Micro(2, 5)
-        micro.memoria(6) = 42
+        val micro = new Micro(2, 5, 0.to(127).map(_ => 0).toList.updated(6, 42))
         val programa = new Programa(List(
           Load(6)
         ))
-        ejecutar(micro, programa)
-        micro.a should equal(42)
+        ejecutar(micro, programa).a should equal(42)
       }
 
       it("STORE(pos) guarda el contenido de A en pos") {
@@ -51,8 +47,7 @@ class MicroSpec extends FunSpec with Matchers {
         val programa = new Programa(List(
           Store(6)
         ))
-        ejecutar(micro, programa)
-        micro.memoria(6) should equal(42)
+        ejecutar(micro, programa).memoria(6) should equal(42)
       }
 
       describe("IF(sub)") {
@@ -65,9 +60,9 @@ class MicroSpec extends FunSpec with Matchers {
               Add
             ))
           ))
-          ejecutar(micro, programa)
-          micro.a should equal(42)
-          micro.b should equal(5)
+          val newMicro = ejecutar(micro, programa)
+          newMicro.a should equal(42)
+          newMicro.b should equal(5)
         }
 
         it("ejecuta las subinstrucciones si A es es 0") {
@@ -78,9 +73,9 @@ class MicroSpec extends FunSpec with Matchers {
               Add
             ))
           ))
-          ejecutar(micro, programa)
-          micro.a should equal(10)
-          micro.b should equal(5)
+          val newMicro = ejecutar(micro, programa)
+          newMicro.a should equal(10)
+          newMicro.b should equal(5)
         }
 
       }
@@ -93,10 +88,10 @@ class MicroSpec extends FunSpec with Matchers {
           // aca frena
           Add
         ))
-        intercept[EjecucionDetenidaException] {
+        val exception = intercept[EjecucionDetenidaException] {
           ejecutar(micro, programa)
         }
-        micro.a should equal(15) // 15, no 20
+        exception.micro.a should equal(15) // 15, no 20
       }
 
     }

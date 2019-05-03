@@ -2,25 +2,21 @@ package ar.edu.unq.o3 {
 
   object Operaciones {
 
-    def ejecutar(micro: Micro, programa: Programa): Unit = {
+    def ejecutar(microInicial: Micro, programa: Programa): Micro = {
 
-      def ejecutarInstruccion: (Instruccion) => Unit = instruccion => {
+      def ejecutarInstruccion: (Micro, Instruccion) => Micro = (micro, instruccion) => {
         instruccion match {
-          case Add => micro.a = micro.a + micro.b
-          case Mul => micro.a = micro.a * micro.b
-          case Swap => {
-            val temp = micro.a
-            micro.a = micro.b
-            micro.b = temp
-          }
-          case Load(posicion) => micro.a = micro.memoria(posicion)
-          case Store(posicion) => micro.memoria(posicion) = micro.a
-          case If(instrucciones) => if (micro.a == 0) instrucciones.foreach(ejecutarInstruccion)
-          case Halt => throw new EjecucionDetenidaException()
+          case Add => micro.copy(a = micro.a + micro.b)
+          case Mul => micro.copy(a = micro.a * micro.b)
+          case Swap => micro.copy(a = micro.b, b = micro.a)
+          case Load(posicion) => micro.copy(a = micro.memoria(posicion))
+          case Store(posicion) => micro.copy(memoria = micro.memoria.updated(posicion, micro.a))
+          case If(instrucciones) => if (micro.a == 0) instrucciones.foldLeft(micro)(ejecutarInstruccion) else micro
+          case Halt => throw new EjecucionDetenidaException(micro)
         }
       }
 
-      programa.instrucciones.foreach(ejecutarInstruccion)
+      programa.instrucciones.foldLeft(microInicial)(ejecutarInstruccion)
     }
 
     def imprimir(programa: Programa): String = {

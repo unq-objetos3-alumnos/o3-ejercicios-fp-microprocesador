@@ -1,14 +1,12 @@
 package ar.edu.unq.o3 {
-  import scala.collection.mutable
-  import scala.collection.mutable.ArrayBuffer
 
-  class Micro(
-     var a: Int,
-     var b: Int,
-     var memoria: mutable.Buffer[Int] = 0.to(127).map(_ => 0).to[ArrayBuffer]
-   )
+  case class Micro(
+    val a: Int,
+    val b: Int,
+    val memoria: List[Int] = 0.to(127).map(_ => 0).toList
+  )
 
-  class EjecucionDetenidaException extends Exception
+  case class EjecucionDetenidaException(val micro: Micro) extends Exception
 
   class Programa(var instrucciones: List[Instruccion])
 
