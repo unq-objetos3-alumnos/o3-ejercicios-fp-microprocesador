@@ -28,13 +28,13 @@ package ar.edu.unq.o3 {
     def memoizar(function: (Micro, Instruccion) => Micro): (Micro, Instruccion) => Micro = {
       var cache = Map[(Micro, Instruccion), Micro]()
 
-      return (micro, instruccion) => {
-        cache.get(micro, instruccion).getOrElse {
-          val nuevoMicro: Micro = function(micro, instruccion)
-          cache += ((micro, instruccion) -> nuevoMicro)
-          nuevoMicro
-        }
+      def ejecutarYCachear(micro: Micro, instruccion: Instruccion)(): Micro = {
+        val nuevoMicro: Micro = function(micro, instruccion)
+        cache += ((micro, instruccion) -> nuevoMicro)
+        nuevoMicro
       }
+
+      return (micro, instruccion) => cache.get(micro, instruccion).getOrElse(ejecutarYCachear(micro, instruccion))
     }
 
     def ejecutarMemoizando(microInicial: Micro, instrucciones: List[Instruccion]): Micro = {
