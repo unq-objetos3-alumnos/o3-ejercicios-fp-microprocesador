@@ -28,11 +28,9 @@ package ar.edu.unq.o3 {
     def memoizar(function: (Micro, Instruccion) => Micro): (Micro, Instruccion) => Micro = {
       var cache = Map[(Micro, Instruccion), Micro]()
 
-      (micro, instruccion) => {
-        if (cache.contains(micro, instruccion))
-          cache.get(micro, instruccion).get
-        else {
-          val nuevoMicro = function(micro, instruccion)
+      return (micro, instruccion) => {
+        cache.get(micro, instruccion).getOrElse {
+          val nuevoMicro: Micro = function(micro, instruccion)
           cache += ((micro, instruccion) -> nuevoMicro)
           nuevoMicro
         }
