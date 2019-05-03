@@ -1,5 +1,6 @@
 import org.scalatest.{FunSpec, Matchers}
 import ar.edu.unq.o3._
+import ar.edu.unq.o3.Operaciones._
 
 class MicroSpec extends FunSpec with Matchers {
 
@@ -12,7 +13,7 @@ class MicroSpec extends FunSpec with Matchers {
         val programa = new Programa(List(
           Add
         ))
-        programa.ejecutar(micro)
+        ejecutar(micro, programa)
         micro.a should equal(2 + 5)
       }
 
@@ -21,7 +22,7 @@ class MicroSpec extends FunSpec with Matchers {
         val programa = new Programa(List(
           Mul
         ))
-        programa.ejecutar(micro)
+        ejecutar(micro, programa)
         micro.a should equal(10)
       }
 
@@ -30,7 +31,7 @@ class MicroSpec extends FunSpec with Matchers {
         val programa = new Programa(List(
           Swap
         ))
-        programa.ejecutar(micro)
+        ejecutar(micro, programa)
         micro.a should equal(5)
         micro.b should equal(2)
       }
@@ -39,18 +40,18 @@ class MicroSpec extends FunSpec with Matchers {
         val micro = new Micro(2, 5)
         micro.memoria(6) = 42
         val programa = new Programa(List(
-          new Load(6)
+          Load(6)
         ))
-        programa.ejecutar(micro)
+        ejecutar(micro, programa)
         micro.a should equal(42)
       }
 
       it("STORE(pos) guarda el contenido de A en pos") {
         val micro = new Micro(42, 5)
         val programa = new Programa(List(
-          new Store(6)
+          Store(6)
         ))
-        programa.ejecutar(micro)
+        ejecutar(micro, programa)
         micro.memoria(6) should equal(42)
       }
 
@@ -59,12 +60,12 @@ class MicroSpec extends FunSpec with Matchers {
         it("no ejecuta las subinstrucciones si A es no es 0") {
           val micro = new Micro(42, 5)
           val programa = new Programa(List(
-            new If(List(
+            If(List(
               Add,
               Add
             ))
           ))
-          programa.ejecutar(micro)
+          ejecutar(micro, programa)
           micro.a should equal(42)
           micro.b should equal(5)
         }
@@ -72,12 +73,12 @@ class MicroSpec extends FunSpec with Matchers {
         it("ejecuta las subinstrucciones si A es es 0") {
           val micro = new Micro(0, 5)
           val programa = new Programa(List(
-            new If(List(
+            If(List(
               Add,
               Add
             ))
           ))
-          programa.ejecutar(micro)
+          ejecutar(micro, programa)
           micro.a should equal(10)
           micro.b should equal(5)
         }
@@ -93,7 +94,7 @@ class MicroSpec extends FunSpec with Matchers {
           Add
         ))
         intercept[EjecucionDetenidaException] {
-          programa.ejecutar(micro)
+          ejecutar(micro, programa)
         }
         micro.a should equal(15) // 15, no 20
       }
@@ -110,13 +111,13 @@ class MicroSpec extends FunSpec with Matchers {
         Add,
         Mul,
         Swap,
-        new Load(23),
-        new Store(42),
-        new If(List(Add, Add)),
+        Load(23),
+        Store(42),
+        If(List(Add, Add)),
         Halt
       ))
 
-      p.imprimir() should equal("ADD, MUL, SWAP, LOAD[23], STORE[42], IF[ADD, ADD], HALT")
+      imprimir(p) should equal("ADD, MUL, SWAP, LOAD[23], STORE[42], IF[ADD, ADD], HALT")
     }
 
   }
@@ -132,7 +133,7 @@ class MicroSpec extends FunSpec with Matchers {
         Add,
         Swap
       ))
-      p.simplificar()
+      simplificar(p)
       p.instrucciones should equal(List(
         Add,
         Swap,
@@ -149,7 +150,7 @@ class MicroSpec extends FunSpec with Matchers {
         Swap,
         Swap
       ))
-      p.simplificar()
+      simplificar(p)
       p.instrucciones should equal(List(
         Add,
       ))
@@ -157,57 +158,69 @@ class MicroSpec extends FunSpec with Matchers {
 
     it("elimina el primer LOAD si hay 2 consecutivos") {
       val p = new Programa(List(
-        new Load(23),
-        new Load(42)
+        Load(23),
+        Load(42)
       ))
-      p.simplificar()
+      simplificar(p)
       p.instrucciones should equal(List(
-        new Load(42),
+        Load(42),
       ))
     }
 
     it("se banca simplificar el resultado de haber simplificado un LOAD que causa otro LOAD + LOAD") {
       val p = new Programa(List(
-        new Load(1),
-        new Load(2),
-        new Load(3)
+        Load(1),
+        Load(2),
+        Load(3)
       ))
-      p.simplificar()
+      simplificar(p)
       p.instrucciones should equal(List(
-        new Load(3),
+        Load(3),
       ))
     }
 
-    it("elimina el primer STORE si hay 2 consecutivos") {
+    it("elimina el primer STORE si hay 2 consecutivos con la misma direccion") {
       val p = new Programa(List(
-        new Store(23),
-        new Store(42)
+        Store(23),
+        Store(23)
       ))
-      p.simplificar()
+      simplificar(p)
       p.instrucciones should equal(List(
-        new Store(42),
+        Store(23)
+      ))
+    }
+
+    it("NO elimina el primer STORE si son consecutivos pero de diferente direccion") {
+      val p = new Programa(List(
+        Store(23),
+        Store(42)
+      ))
+      simplificar(p)
+      p.instrucciones should equal(List(
+        Store(23),
+        Store(42)
       ))
     }
 
     it("elimina un IF que no tiene subinstrucciones") {
       val p = new Programa(List(
-        new If(List()),
-        new Store(23)
+        If(List()),
+        Store(23)
       ))
-      p.simplificar()
+      simplificar(p)
       p.instrucciones should equal(List(
-        new Store(23),
+        Store(23),
       ))
     }
 
     it("elimina un IF que no tiene subinstrucciones que está al final") {
       val p = new Programa(List(
-        new Store(23),
-        new If(List())
+        Store(23),
+        If(List())
       ))
-      p.simplificar()
+      simplificar(p)
       p.instrucciones should equal(List(
-        new Store(23),
+        Store(23),
       ))
     }
 
